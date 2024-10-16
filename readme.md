@@ -10,3 +10,15 @@
     └── php
         └── php-deployment.yaml
 ```
+
+# Build
+
+```
+docker build -t my-php-app .
+```
+
+# Run
+
+```
+docker run -d -p 8080:80 my-php-app
+```
