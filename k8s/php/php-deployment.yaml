@@ -1,1 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-php-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-php-app
+  template:
+    metadata:
+      labels:
+        app: my-php-app
+    spec:
+      containers:
+      - name: php-container
+        image: php:apache
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: php-code-volume
+          mountPath: /var/www/html
+        env:
+        - name: REDIS_HOST
+          value: redis-service
+        - name: MYSQL_HOST
+          value: mysql-service
+        - name: MYSQL_DATABASE
+          value: my-php-db
+        - name: MYSQL_USER
+          value: my-php-user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: password
+      volumes:
+      - name: php-code-volume
+        persistentVolumeClaim:
+          claimName: php-code-pvc
 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-php-service
+spec:
+  selector:
+    app: my-php-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
