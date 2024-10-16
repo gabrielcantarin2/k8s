@@ -1,19 +1,24 @@
-FROM php:8.1-apache # Use the official PHP Apache image
+FROM php:8.1-apache
 
-# Install necessary extensions
-RUN docker-php-ext-install pdo pdo_mysql
+# Install necessary extensions (add more if needed)
+RUN docker-php-ext-install pdo pdo_mysql mbstring
 
-# Set working directory
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
 WORKDIR /var/www/html
 
-# Copy composer files
+# Copy only necessary files first to leverage Docker cache
 COPY composer.json composer.lock ./
-
-# Install dependencies
 RUN composer install --no-interaction --no-dev --optimize-autoloader
 
-# Copy application code
 COPY . .
+
+# Generate application key
+RUN php artisan key:generate
+
+# Run database migrations (if needed)
+# RUN php artisan migrate --force
 
 # Expose port 80
 EXPOSE 80
